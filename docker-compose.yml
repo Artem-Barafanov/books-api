@@ -1,0 +1,38 @@
+services:
+  db:
+    build: ./db
+    environment:
+      POSTGRES_DB: books
+      POSTGRES_USER: student
+      POSTGRES_PASSWORD: student123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - books_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U student -d books"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: ./app
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: db
+      DB_NAME: books
+      DB_USER: student
+      DB_PASSWORD: student123
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - books_network
+
+volumes:
+  postgres_data:
+
+networks:
+  books_network:
+    driver: bridge
